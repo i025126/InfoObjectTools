@@ -1,0 +1,368 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_MSAG" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <T100A>
+    <ARBGB>ZCORE</ARBGB>
+    <MASTERLANG>E</MASTERLANG>
+    <STEXT>General purpose message class for cross content development</STEXT>
+   </T100A>
+   <T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>000</MSGNR>
+     <TEXT>&amp; &amp; &amp; &amp;</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>001</MSGNR>
+     <TEXT>Calling BAPI to create InfoObject &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>002</MSGNR>
+     <TEXT>Starting processing of &amp;1 for target model &amp;2</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>003</MSGNR>
+     <TEXT>Getting meta information from &amp;2 for InfoObject &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>004</MSGNR>
+     <TEXT>Checking and/or creating Required InfoOBject &amp;1 for target model &amp;2</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>005</MSGNR>
+     <TEXT>Running the adapting of area &amp;1 for InfoObject &amp;2</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>006</MSGNR>
+     <TEXT>New Name for InfoObject &amp;2 --&gt; &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>007</MSGNR>
+     <TEXT>Insert of &amp;1 records into table &amp;2 was succesful</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>008</MSGNR>
+     <TEXT>No object with name &amp;1 exists in version &amp;2 in destination &amp;3</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>009</MSGNR>
+     <TEXT>Adding Required object &amp;2 as clone of &amp;1 due to &amp;3</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>010</MSGNR>
+     <TEXT>InfoObject &amp;1 is Already being procesed</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>011</MSGNR>
+     <TEXT>Simulation</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>012</MSGNR>
+     <TEXT>Start cloning process of InfoObject &amp;1 into &amp;2</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>013</MSGNR>
+     <TEXT>&amp;4 of &amp;1 from &amp;2(&amp;3) executed</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>014</MSGNR>
+     <TEXT>&amp;1 &amp;2 &amp;3</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>015</MSGNR>
+     <TEXT>InfoObject &amp;1 is not activate and needs to be before being used as Fixed</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>016</MSGNR>
+     <TEXT>InfoObject &amp;1 is cloned to &amp;2 as &amp;3</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>017</MSGNR>
+     <TEXT>For InfoObject &amp;1 adding the attribute &amp;2</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>018</MSGNR>
+     <TEXT>For InfoObject &amp;1 - Added the &amp;3 as NavAttr from &amp;2</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>019</MSGNR>
+     <TEXT>No Abbreviaition for the InfoObject &amp;1 in Cluster &amp;2</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>020</MSGNR>
+     <TEXT>Dynamic SQL for selection of members of &amp;1 from &amp;2 falied: &amp;3</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>021</MSGNR>
+     <TEXT>RFC Call error to Dest &amp;1, FM &amp;2 - Error &amp;3</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>022</MSGNR>
+     <TEXT>Do not process: &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>023</MSGNR>
+     <TEXT>Unknown Role type &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>024</MSGNR>
+     <TEXT>Roletype &amp;1 matched to template &amp;2 - Template does not exists</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>101</MSGNR>
+     <TEXT>Start processing CREATE of block &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>102</MSGNR>
+     <TEXT>Create and/or adjust (&amp;1)ALL Cluster role</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>103</MSGNR>
+     <TEXT>Role &amp;1 does not exist and will be created</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>104</MSGNR>
+     <TEXT>Role &amp;1 exists</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>105</MSGNR>
+     <TEXT>In role &amp;1 the role &amp;2 is not needed anymore and deleted</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>106</MSGNR>
+     <TEXT>In role &amp;1 the role &amp;2 is already in - not added</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>107</MSGNR>
+     <TEXT>Adding role &amp;2 to role &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>108</MSGNR>
+     <TEXT>Check if role &amp;1 must be created</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>109</MSGNR>
+     <TEXT>Role &amp;1 will be created</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>110</MSGNR>
+     <TEXT>Adjust profile of  role &amp;1 if required</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>111</MSGNR>
+     <TEXT>Finish adjusting profile for role &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>112</MSGNR>
+     <TEXT>Role &amp;1 could not be converted into a block and Cluster</TEXT>
+    </T100>
+   </T100>
+   <LONGTEXTS>
+    <item>
+     <DOKIL>
+      <ID>NA</ID>
+      <OBJECT>ZCORE112</OBJECT>
+      <LANGU>E</LANGU>
+      <TYP>E</TYP>
+      <VERSION>0001</VERSION>
+      <MASTERLANG>X</MASTERLANG>
+      <TXTLINES>00022</TXTLINES>
+     </DOKIL>
+     <HEAD>
+      <TDOBJECT>DOKU</TDOBJECT>
+      <TDNAME>ZCORE112</TDNAME>
+      <TDID>NA</TDID>
+      <TDSPRAS>E</TDSPRAS>
+      <TDFORM>S_DOCU_SHOW</TDFORM>
+      <TDSTYLE>S_DOCUS1</TDSTYLE>
+      <TDVERSION>00001</TDVERSION>
+      <TDLINESIZE>072</TDLINESIZE>
+     </HEAD>
+     <LINES>
+      <TLINE>
+       <TDFORMAT>U1</TDFORMAT>
+       <TDLINE>&amp;CAUSE&amp;</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>AS</TDFORMAT>
+       <TDLINE>If a role name cannot be converted into a block and a cluster there is</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>something wrong. Since the entire setup of the system relies on</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>naming... the naming of the roles are as follows:</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>AS</TDFORMAT>
+       <TDLINE>1-3,,&apos;BW4&apos; fixed to identify the system of the role</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>AS</TDFORMAT>
+       <TDLINE>4-4,,Cluster</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>AS</TDFORMAT>
+       <TDLINE>4-7,,Block and yes the first character is the cluster</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>AS</TDFORMAT>
+       <TDLINE>8-8,,Role type - see the documentation for possible values (&apos;C&apos; is</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>content builder f.x.)</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>AS</TDFORMAT>
+       <TDLINE>9-9,,Underscore</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>AS</TDFORMAT>
+       <TDLINE>10-,,Named as taken from the InfoArea xALL</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>AS</TDFORMAT>
+       <TDLINE>1) Make sure that the cluster is defined as a child node of the InfoArea</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>SYSX_ALL with the cluster as first character and ALL to defined it as a</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>cluster.</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>AS</TDFORMAT>
+       <TDLINE>2) Make sure to defined the standard structure of the environment as (x</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDLINE>represents the cluster)</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>/</TDFORMAT>
+       <TDLINE>ROOTx</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>/</TDFORMAT>
+       <TDLINE>- MDAx</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>/</TDFORMAT>
+       <TDLINE>- EDWx</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>/</TDFORMAT>
+       <TDLINE>- IAPx</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>/</TDFORMAT>
+       <TDLINE>- EXZx</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>/</TDFORMAT>
+       <TDLINE>- AAVx</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>/</TDFORMAT>
+       <TDLINE>- SYSx</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>U1</TDFORMAT>
+       <TDLINE>&amp;SYSTEM_RESPONSE&amp;</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>AS</TDFORMAT>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>U1</TDFORMAT>
+       <TDLINE>&amp;WHAT_TO_DO&amp;</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>AS</TDFORMAT>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>U1</TDFORMAT>
+       <TDLINE>&amp;SYS_ADMIN&amp;</TDLINE>
+      </TLINE>
+      <TLINE>
+       <TDFORMAT>AS</TDFORMAT>
+      </TLINE>
+     </LINES>
+    </item>
+   </LONGTEXTS>
+  </asx:values>
+ </asx:abap>
+</abapGit>
