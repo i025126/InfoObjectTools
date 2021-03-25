@@ -13,14 +13,14 @@ CLASS zcl_core_iobj_tool DEFINITION
         " This InfoObject is required by the InfoObject we are trying to clone
         original     TYPE rsiobjnm,
         " What target
-        target_model TYPE zcore_models,
+        target_cluster TYPE zcore_cluster,
         " This will be the new name of the new object
         iobjnm       TYPE rsiobjnm,
         " this is the object of the new infoobject
         r_iobjnm     TYPE REF TO zcl_core_iobj_tool,
       END OF ltys_infoobject,
       ltyt_infoobject  TYPE STANDARD TABLE OF ltys_infoobject WITH NON-UNIQUE DEFAULT KEY,
-      ltyth_infoobject TYPE HASHED TABLE OF ltys_infoobject WITH UNIQUE KEY original target_model.
+      ltyth_infoobject TYPE HASHED TABLE OF ltys_infoobject WITH UNIQUE KEY original target_cluster.
 
     TYPES:
       BEGIN OF ltys_iobj_meta,
@@ -44,15 +44,9 @@ CLASS zcl_core_iobj_tool DEFINITION
       END OF cs_languages.
 
     CONSTANTS:
-      BEGIN OF cs_models,
-        common TYPE zcore_models VALUE 'X',
-        sifin  TYPE zcore_models VALUE 'A',
-        tatis  TYPE zcore_models VALUE 'B',
-        custom TYPE zcore_models VALUE 'C',
-        legacy TYPE zcore_models VALUE 'D',
-        tax    TYPE zcore_models VALUE 'E',
-        oldbw  TYPE zcore_models VALUE 'F',
-      END OF cs_models,
+      BEGIN OF gc_cluster,
+        common TYPE zcore_cluster VALUE 'X',
+      END OF gc_cluster,
       cv_replacestring TYPE char72 VALUE '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
 
     CONSTANTS:
@@ -66,15 +60,16 @@ CLASS zcl_core_iobj_tool DEFINITION
     CLASS-DATA:
       gv_infoarea     TYPE rsinfoarea VALUE 'SYS_COPY',
       _message        TYPE string,
+      gv_prefix       type char2,
       gv_detlevel     TYPE bal_s_msg-detlevel VALUE '1',
       gv_numlevel     TYPE i VALUE 1,
       gv_iobjnm       TYPE rsiobjnm,
       gv_simulation   TYPE rs_bool VALUE rs_c_false,
       gv_log_handle   TYPE balloghndl,
-      gth_model_iobj  TYPE ltyth_infoobject,
+      gth_cluster_iobj  TYPE ltyth_infoobject,
       gth_workinglist TYPE ltyth_iobjnm,
       gv_rfcdest      TYPE rfcdest,
-      gv_target_model TYPE zcore_models.
+      gv_target_cluster TYPE zcore_cluster.
 
     CLASS-METHODS:
       static_set_infoarea
@@ -87,7 +82,7 @@ CLASS zcl_core_iobj_tool DEFINITION
         IMPORTING
           it_iobjnm       TYPE ltyt_rng_iobjnm
           iv_objvers      TYPE rsobjvers
-          iv_target_model TYPE zcore_models
+          iv_target_cluster TYPE zcore_cluster
           iv_rfcdest      TYPE rfcdest DEFAULT 'NONE',
       static_execute_cloning
         IMPORTING
@@ -97,8 +92,8 @@ CLASS zcl_core_iobj_tool DEFINITION
                   iv_original          TYPE rsiobjnm
                   iv_objvers           TYPE rsobjvers DEFAULT rs_c_objvers-active
                   iv_rfcdest           TYPE rfcdest DEFAULT 'NONE'
-                  iv_target_model      TYPE zcore_models DEFAULT cs_models-common
-        RETURNING VALUE(rr_model_iobj) TYPE REF TO zcl_core_iobj_tool
+                  iv_target_cluster      TYPE zcore_cluster DEFAULT gc_cluster-common
+        RETURNING VALUE(rr_cluster_iobj) TYPE REF TO zcl_core_iobj_tool
         RAISING
                   cx_rs_error.
 
@@ -107,7 +102,7 @@ CLASS zcl_core_iobj_tool DEFINITION
         IMPORTING
           iv_original     TYPE rsiobjnm
           iv_objvers      TYPE rsobjvers
-          iv_target_model TYPE zcore_models
+          iv_target_cluster TYPE zcore_cluster
           iv_rfcdest      TYPE rfcdest DEFAULT 'NONE'
         RAISING
           cx_rs_not_found
@@ -129,7 +124,7 @@ CLASS zcl_core_iobj_tool DEFINITION
       nv_missing       TYPE rs_bool VALUE rs_c_false,
       nv_updateiobj    TYPE rs_bool VALUE rs_c_false,
       nv_rfcdest       TYPE rfcdest,
-      nv_target_model  TYPE zcore_models,
+      nv_target_cluster  TYPE zcore_cluster,
       ns_new_meta      TYPE ltys_iobj_meta,
       ns_original_meta TYPE ltys_iobj_meta,
       nt_required      TYPE ltyt_infoobject.
@@ -165,7 +160,9 @@ CLASS zcl_core_iobj_tool DEFINITION
 
     METHODS:
       do_persistest,
-      do_persistest_processing,
+      do_persistest_processing
+        RETURNING
+          VALUE(rt_rng_iobjnm) type ltyt_rng_iobjnm,
       do_adapt
         RAISING cx_rs_error,
       do_adapt_baseinfoobject
@@ -189,8 +186,14 @@ CLASS zcl_core_iobj_tool DEFINITION
         RAISING   cx_rs_not_found,
       get_current_metadata
         RAISING cx_rs_not_found,
+      get_cluster
+        IMPORTING
+          iv_iobjnm type rsiobjnm OPTIONAL
+        RETURNING
+          VALUE(rv_cluster) type zcore_cluster,
       get_new_name
-        RETURNING VALUE(rv_new_name) TYPE rsiobjnm,
+        RETURNING
+          VALUE(rv_new_name) TYPE rsiobjnm,
       get_parameter_list
         IMPORTING
                   iv_funcname         TYPE funcname
@@ -227,12 +230,18 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
 
         static_go_level_low( ).
         LOOP AT nt_required ASSIGNING FIELD-SYMBOL(<ls_required>).
-          CALL METHOD <ls_required>-r_iobjnm->do_persistest_processing( ).
+          append lines of <ls_required>-r_iobjnm->do_persistest_processing( ) to rt_rng_iobjnm.
         ENDLOOP.
         do_persistest(  ).
         static_go_level_up( ).
       ENDIF.
     ENDIF.
+
+    IF nv_original <> nv_iobjnm OR nv_updateiobj = rs_c_true.
+      APPEND VALUE #(  sign    = rs_c_range_sign-including
+                       option  = rs_c_range_opt-equal
+                       low     = nv_iobjnm ) TO rt_rng_iobjnm.
+    endif.
 
   ENDMETHOD.
 
@@ -286,7 +295,7 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
         DATA: ls_trans TYPE zcore_trans.
 
         ls_trans-original   = nv_original.
-        ls_trans-data_model = nv_target_model.
+        ls_trans-doccluster = nv_target_cluster.
         ls_trans-iobjnm     = nv_iobjnm.
         INSERT zcore_trans FROM ls_trans.
         IF sy-subrc <> 0.
@@ -387,26 +396,26 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
       gv_iobjnm = iv_original.
     ENDIF.
 
-    READ TABLE gth_model_iobj ASSIGNING FIELD-SYMBOL(<ls_model_iobj>)
+    READ TABLE gth_cluster_iobj ASSIGNING FIELD-SYMBOL(<ls_cluster_iobj>)
        WITH TABLE KEY original     = iv_original
-                      target_model = iv_target_model.
+                      target_cluster = iv_target_cluster.
     IF sy-subrc <> 0.
-      MESSAGE i002(zcore) WITH iv_original iv_target_model INTO _message.
+      MESSAGE i002(zcore) WITH iv_original iv_target_cluster INTO _message.
       static_add_message(  ).
       "" at this time we only have the meta information for the original and now we need to create the new
       TRY.
           static_go_level_low( ).
 
           INSERT VALUE #(  original = iv_original
-                           target_model = iv_target_model )
-                     INTO TABLE gth_model_iobj
-                     ASSIGNING <ls_model_iobj>.
+                           target_cluster = iv_target_cluster )
+                     INTO TABLE gth_cluster_iobj
+                     ASSIGNING <ls_cluster_iobj>.
 
           TRY.
-              CREATE OBJECT <ls_model_iobj>-r_iobjnm
+              CREATE OBJECT <ls_cluster_iobj>-r_iobjnm
                 EXPORTING
                   iv_original     = iv_original
-                  iv_target_model = iv_target_model
+                  iv_target_cluster = iv_target_cluster
                   iv_objvers      = iv_objvers
                   iv_rfcdest      = iv_rfcdest.
             CATCH cx_rs_not_found INTO DATA(lrx_not_found).
@@ -419,35 +428,35 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
           " Let's try and see if we already have the target object in the curernt system
           " and model. The get_existing will throw te CX_RS_NOT_FOUND if a clone
           " is not found, not clone found means that we need a new clone
-          CALL METHOD <ls_model_iobj>-r_iobjnm->get_existing( ).
-          <ls_model_iobj>-iobjnm       = <ls_model_iobj>-r_iobjnm->nv_iobjnm.
-          <ls_model_iobj>-r_iobjnm->nv_processing = rs_c_true.
+          CALL METHOD <ls_cluster_iobj>-r_iobjnm->get_existing( ).
+          <ls_cluster_iobj>-iobjnm       = <ls_cluster_iobj>-r_iobjnm->nv_iobjnm.
+          <ls_cluster_iobj>-r_iobjnm->nv_processing = rs_c_true.
           " And load the corresponding metadata
-          CALL METHOD <ls_model_iobj>-r_iobjnm->get_current_metadata( ).
-          CALL METHOD <ls_model_iobj>-r_iobjnm->do_adapt_details.
-          CALL METHOD <ls_model_iobj>-r_iobjnm->do_adapt_attributes.
+          CALL METHOD <ls_cluster_iobj>-r_iobjnm->get_current_metadata( ).
+          CALL METHOD <ls_cluster_iobj>-r_iobjnm->do_adapt_details.
+          CALL METHOD <ls_cluster_iobj>-r_iobjnm->do_adapt_attributes.
 
         CATCH cx_rs_not_found.
           " and it turns our that he InfoObject clone target is not really created yet
           " se we will create a "model" of it, first finding an appropriate name, this
-          " will also set the nv_iobjnm as per the target_model - later we might be able
+          " will also set the nv_iobjnm as per the target_cluster - later we might be able
           " to extend the concept to create more than one model
-          CALL METHOD <ls_model_iobj>-r_iobjnm->get_new_name.
-          <ls_model_iobj>-iobjnm       = <ls_model_iobj>-r_iobjnm->nv_iobjnm.
+          CALL METHOD <ls_cluster_iobj>-r_iobjnm->get_new_name.
+          <ls_cluster_iobj>-iobjnm       = <ls_cluster_iobj>-r_iobjnm->nv_iobjnm.
           " Adapt the values in the details
-          CALL METHOD <ls_model_iobj>-r_iobjnm->do_adapt_details.
-          CALL METHOD <ls_model_iobj>-r_iobjnm->do_adapt_compounding.
-          CALL METHOD <ls_model_iobj>-r_iobjnm->do_adapt_attributes.
-          IF <ls_model_iobj>-r_iobjnm->ns_original_meta-elimination IS NOT INITIAL OR
-             <ls_model_iobj>-r_iobjnm->ns_original_meta-hanafieldsmapping IS NOT INITIAL OR
-             <ls_model_iobj>-r_iobjnm->ns_original_meta-xxlattributes IS NOT INITIAL.
+          CALL METHOD <ls_cluster_iobj>-r_iobjnm->do_adapt_details.
+          CALL METHOD <ls_cluster_iobj>-r_iobjnm->do_adapt_compounding.
+          CALL METHOD <ls_cluster_iobj>-r_iobjnm->do_adapt_attributes.
+          IF <ls_cluster_iobj>-r_iobjnm->ns_original_meta-elimination IS NOT INITIAL OR
+             <ls_cluster_iobj>-r_iobjnm->ns_original_meta-hanafieldsmapping IS NOT INITIAL OR
+             <ls_cluster_iobj>-r_iobjnm->ns_original_meta-xxlattributes IS NOT INITIAL.
             BREAK-POINT.
           ENDIF.
       ENDTRY.
       static_go_level_up( ).
     ENDIF.
 
-    rr_model_iobj = <ls_model_iobj>-r_iobjnm.
+    rr_cluster_iobj = <ls_cluster_iobj>-r_iobjnm.
 
   ENDMETHOD.
 
@@ -529,7 +538,7 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
     " output rv_used = 'X' if found
 
     rv_used = rs_c_false.
-    LOOP AT gth_model_iobj ASSIGNING FIELD-SYMBOL(<ls_iobj>).
+    LOOP AT gth_cluster_iobj ASSIGNING FIELD-SYMBOL(<ls_iobj>).
       IF <ls_iobj>-iobjnm = iv_newname.
         rv_used = rs_c_true.
         EXIT.
@@ -550,7 +559,7 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
 
   METHOD do_add_required_infoobject.
 
-    MESSAGE i004(zcore) WITH iv_required nv_target_model INTO _message.
+    MESSAGE i004(zcore) WITH iv_required nv_target_cluster INTO _message.
     static_add_message( ).
 
     static_go_level_low( ).
@@ -561,13 +570,13 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
       WITH KEY original = iv_required.
     IF sy-subrc <> 0.
       ls_required-original     = iv_required.
-      ls_required-target_model = nv_target_model.
+      ls_required-target_cluster = nv_target_cluster.
 
       ls_required-r_iobjnm = factory(
                   iv_original         = iv_required
                   iv_objvers          = nv_objvers
                   iv_rfcdest          = nv_rfcdest
-                  iv_target_model     = nv_target_model ).
+                  iv_target_cluster     = nv_target_cluster ).
       " We don't need a read as on object can only popup once per
       " InfoObject. It's not a hashed table as we need the processing
       " to be done once and in order (compounding first)
@@ -809,10 +818,10 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
     ENDIF.
 
     CLEAR rv_iobjnm.
-    DO 5 TIMES.
+    DO 6 TIMES.
       CASE sy-index.
         WHEN 1.
-          " Never copy the fixed InfoObjects
+          " Never copy the fixed InfoObjects, but also just check if these have been activated
           SELECT SINGLE iobjnm INTO rv_iobjnm
               FROM rsdiobjfix
               WHERE iobjnm = lv_iobjnm.
@@ -841,6 +850,38 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
             ENDIF.
           ENDIF.
         WHEN 2.
+          IF nv_missing = rs_c_false.
+            " Find out if the name is already in
+            SELECT SINGLE iobjnm INTO rv_iobjnm
+                FROM zcore_trans
+                WHERE original    = lv_iobjnm AND
+                       doccluster = gv_target_cluster.
+            IF sy-subrc = 0.
+              nv_cloned = rs_c_true.
+              MESSAGE i016(zcore) WITH lv_iobjnm rv_iobjnm 'Existing clone Object - Update' INTO _message.
+              CALL METHOD static_add_message.
+              EXIT.
+            ENDIF.
+          ENDIF.
+        when 3.
+          " Techincally you should be able to clone any object
+          " 0 is business content
+          " X is cross
+          " Z is playground
+          if nv_rfcdest = 'NONE' and get_cluster( lv_iobjnm ) <> gv_target_cluster and get_cluster( lv_iobjnm ) between 'A' and 'Y'.
+            IF iv_check_workinglist = rs_c_true.
+              READ TABLE gth_workinglist TRANSPORTING NO FIELDS
+                 WITH TABLE KEY table_line = lv_iobjnm.
+              IF sy-subrc = 0.
+                MESSAGE i016(zcore) WITH lv_iobjnm '?' 'No processing yet - Clone?' INTO _message.
+                EXIT.
+              ENDIF.
+            else.
+              nv_cloned = rs_c_false.
+              raise exception type cx_rs_not_found.
+            endif.
+          endif.
+        WHEN 4.
           " So let us see if the original (name) does check_exists in
           " a active version in the this installation
           CALL FUNCTION 'BAPI_IOBJ_GETDETAIL'
@@ -856,21 +897,7 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
             CALL METHOD static_add_message.
             EXIT.
           ENDIF.
-        WHEN 3.
-          IF nv_missing = rs_c_false.
-            " Find out if the name is already in
-            SELECT SINGLE iobjnm INTO rv_iobjnm
-                FROM zcore_trans
-                WHERE original = lv_iobjnm AND
-                      data_model = nv_target_model.
-            IF sy-subrc = 0.
-              nv_cloned = rs_c_true.
-              MESSAGE i016(zcore) WITH lv_iobjnm rv_iobjnm 'Existing clone Object - Update' INTO _message.
-              CALL METHOD static_add_message.
-              EXIT.
-            ENDIF.
-          ENDIF.
-        WHEN 4.
+        WHEN 5.
           IF iv_check_workinglist = rs_c_true.
             READ TABLE gth_workinglist TRANSPORTING NO FIELDS
                WITH TABLE KEY table_line = lv_iobjnm.
@@ -887,6 +914,38 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
     IF rv_iobjnm IS NOT INITIAL AND iv_check_workinglist IS NOT SUPPLIED.
       nv_iobjnm = rv_iobjnm.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  method get_cluster.
+  " Techincally the correct way would be to select
+  " the InfoArea of the InfoObject and return that cluster
+    if iv_iobjnm is supplied.
+      data(lv_iobjnm) = iv_iobjnm.
+    else.
+      lv_iobjnm = nv_iobjnm.
+    endif.
+
+    try.
+        "Not sure that I would like to have the ZI_CORE_ContentView as a preqequisute for this
+        "little module
+        select single zi~doccluster
+          from ('ZI_CORE_ContentView as zi inner join rsdiobj as rs on zi~InfoArea = rs~mtinfoarea')
+          where rs~objvers = @rs_c_objvers-active and
+                rs~iobjnm  = @lv_iobjnm
+          into @rv_cluster.
+      CATCH cx_sy_sql_error.
+        " The ZI_CORE_ContentView have not been implemented
+    endtry.
+
+    if sy-subrc <> 0.
+      rv_cluster = lv_iobjnm(1).
+    endif.
+
+    if rv_cluster not between 'A' and 'Z'.
+      rv_cluster = gc_cluster-common.
+    endif.
 
   ENDMETHOD.
 
@@ -920,24 +979,68 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
         FROM zcore_trans
         INTO @nv_iobjnm
         WHERE original   = @nv_original AND
-              data_model = @gv_target_model.
+              doccluster = @gv_target_cluster.
     ELSEIF nv_original+0(1) = '0'.
       SELECT SINGLE smartname
           INTO @nv_iobjnm
           FROM zcore_smart
           WHERE remoteiobjnm = @nv_original.
       if sy-subrc = 0.
-        nv_iobjnm = |{ nv_target_model }{ nv_iobjnm }|.
+        nv_iobjnm = |{ nv_target_cluster }{ nv_iobjnm }|.
       else.
       " No smart translation of BCS InfoObject
       " Use standard transaltion
       " Standard InfoObject is always translated to 'X' first
-        nv_iobjnm+0(1) = nv_target_model.
+        nv_iobjnm+0(1) = nv_target_cluster.
       endif.
+
+      if gv_prefix is NOT INITIAL.
+        data(lv_prelen) = strlen( gv_prefix ).
+        if nv_iobjnm+1(lv_prelen) <> gv_prefix.
+          nv_iobjnm = |{ nv_iobjnm(1) }{ gv_prefix }{ nv_iobjnm+1 }|.
+        endif.
+      endif.
+
       DATA(lv_iobjlen) = strlen( nv_iobjnm ).
 
       DO.
         DATA(lv_index) = sy-index - 1.
+        IF lv_iobjlen GT 9.
+          lv_iobjnm = nv_iobjnm.
+          lv_prelen = lv_prelen + 1.
+          if lv_prelen < 2.
+            lv_prelen = 2.
+          endif.
+
+          do.
+            if lv_iobjnm ca '_'.
+              " First option is to replace the underscores
+              replace FIRST OCCURRENCE OF '_' IN lv_iobjnm with '' in CHARACTER MODE.
+            elseif lv_iobjnm+lv_prelen ca 'A'.
+              REPLACE FIRST OCCURRENCE OF 'A' in lv_iobjnm+lv_prelen with '' in CHARACTER MODE.
+            elseif lv_iobjnm+lv_prelen ca 'E'.
+              REPLACE FIRST OCCURRENCE OF 'E' in lv_iobjnm+lv_prelen with '' in CHARACTER MODE.
+            elseif lv_iobjnm+lv_prelen ca 'I'.
+              REPLACE FIRST OCCURRENCE OF 'I' in lv_iobjnm+lv_prelen with '' in CHARACTER MODE.
+            elseif lv_iobjnm+lv_prelen ca 'O'.
+              REPLACE FIRST OCCURRENCE OF 'O' in lv_iobjnm+lv_prelen with '' in CHARACTER MODE.
+            elseif lv_iobjnm+lv_prelen ca 'U'.
+              REPLACE FIRST OCCURRENCE OF 'U' in lv_iobjnm+lv_prelen with '' in CHARACTER MODE.
+            elseif lv_iobjnm+lv_prelen ca 'Y'.
+              REPLACE FIRST OCCURRENCE OF 'Y' in lv_iobjnm+lv_prelen with '' in CHARACTER MODE.
+            endif.
+
+            if strlen( lv_iobjnm ) LE 9 or lv_iobjnm = nv_iobjnm.
+              " So have we removed enough underscores and characters so that the length is below
+              " 9... or do we not have more tools in the back
+              nv_iobjnm = lv_iobjnm.
+              exit.
+            endif.
+            nv_iobjnm = lv_iobjnm.
+          enddo.
+        endif.
+
+        lv_iobjlen = strlen( nv_iobjnm ).
         IF lv_iobjlen GE 8.
           " If the Name is 8 or 9 characters long we will use the last
           " character on find a unique name... or crash in the process
@@ -977,11 +1080,12 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
         ASSERT lv_index <= strlen(  cv_replacestring ).
       ENDDO.
     ELSEIF
-       nv_original+0(1) = cs_models-common AND
-       nv_rfcdest = 'NONE'.
+       " Again - We should have a check that the cluster is a valid cluster
+       " But this allow clone between clusters
+       nv_original+0(1) between 'A' and 'Z' AND nv_rfcdest = 'NONE'.
       " From the new commen datamodel in 'X'
       " the the new model from initialization
-      nv_iobjnm+0(1) = nv_target_model.
+      nv_iobjnm+0(1) = nv_target_cluster.
     ELSEIF
        nv_rfcdest <> 'NONE'.
       " Remote none Business content InfoObject
@@ -1000,10 +1104,10 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
         ELSE.
           " found a preferred translation of the InfoObject
           " kind of moving from ZZSOME to MEANING
-          CONCATENATE nv_target_model nv_iobjnm INTO nv_iobjnm.
+          CONCATENATE nv_target_cluster nv_iobjnm INTO nv_iobjnm.
         ENDIF.
       ELSE.
-        CONCATENATE nv_target_model nv_iobjnm INTO nv_iobjnm.
+        CONCATENATE nv_target_cluster nv_iobjnm INTO nv_iobjnm.
         nv_iobjnm = nv_iobjnm(9).
         lv_iobjlen = strlen( nv_iobjnm ).
         DO.
@@ -1055,7 +1159,7 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
 
   METHOD constructor.
     nv_original     = iv_original.
-    nv_target_model = iv_target_model.
+    nv_target_cluster = iv_target_cluster.
     nv_objvers      = iv_objvers.
     nv_rfcdest = iv_rfcdest.
 
@@ -1234,7 +1338,7 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD static_reset_all.
-    LOOP AT gth_model_iobj ASSIGNING FIELD-SYMBOL(<ls_iobj>).
+    LOOP AT gth_cluster_iobj ASSIGNING FIELD-SYMBOL(<ls_iobj>).
       CALL METHOD <ls_iobj>-r_iobjnm->do_reset( ).
     ENDLOOP.
 
@@ -1253,15 +1357,13 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
       lt_rng_trans TYPE RANGE OF rstran.
 
     LOOP AT gth_workinglist ASSIGNING FIELD-SYMBOL(<lv_iobjnm>).
-      DATA(lr_iobjnm) = gth_model_iobj[ original = <lv_iobjnm> target_model = gv_target_model ]-r_iobjnm.
+      DATA(lr_iobjnm) = gth_cluster_iobj[ original = <lv_iobjnm> target_cluster = gv_target_cluster ]-r_iobjnm.
       " Make sure the parent is itself for the intitial call
-      CALL METHOD lr_iobjnm->do_persistest_processing( ).
-      IF lr_iobjnm->nv_original <> lr_iobjnm->nv_iobjnm OR lr_iobjnm->nv_updateiobj = rs_c_true.
-        APPEND VALUE #(  sign    = rs_c_range_sign-including
-                         option  = rs_c_range_opt-equal
-                         low     = lr_iobjnm->nv_iobjnm ) TO lt_rng_iobj.
-      ENDIF.
+      append lines of lr_iobjnm->do_persistest_processing( ) to lt_rng_iobj.
     ENDLOOP.
+
+    sort lt_rng_iobj by low.
+    delete ADJACENT DUPLICATES FROM lt_rng_iobj COMPARING low.
 
     IF iv_no_activation = rs_c_false.
       SUBMIT rsdg_iobj_activate WITH
@@ -1306,7 +1408,7 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
   METHOD static_do_insertlist.
 
     gv_rfcdest = iv_rfcdest.
-    gv_target_model = iv_target_model.
+    gv_target_cluster = iv_target_cluster.
 
     " Insert the entries in the list and start the cloning
     LOOP AT it_iobjnm ASSIGNING FIELD-SYMBOL(<ls_iobjnm>).
@@ -1318,12 +1420,12 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
           CALL METHOD zcl_core_iobj_tool=>factory(
               iv_objvers      = iv_objvers
               iv_rfcdest      = iv_rfcdest
-              iv_target_model = iv_target_model
+              iv_target_cluster = iv_target_cluster
               iv_original     = <lv_iobjnm> ).
         ENDLOOP.
       CATCH cx_rs_error.
         CALL METHOD static_display_log.
-        REFRESH: gth_model_iobj, gth_workinglist.
+        REFRESH: gth_cluster_iobj, gth_workinglist.
     ENDTRY.
   ENDMETHOD.
 
