@@ -884,19 +884,31 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
         WHEN 4.
           " So let us see if the original (name) does check_exists in
           " a active version in the this installation
-          CALL FUNCTION 'BAPI_IOBJ_GETDETAIL'
-            EXPORTING
-              infoobject = lv_iobjnm
-              version    = rs_c_objvers-active
-            IMPORTING
-              return     = ls_return.
-          IF ls_return-number = '000'.
-            rv_iobjnm = lv_iobjnm.
-            nv_cloned = rs_c_true.
-            MESSAGE i016(zcore) WITH lv_iobjnm rv_iobjnm 'Reuase name - copy' INTO _message.
-            CALL METHOD static_add_message.
-            EXIT.
-          ENDIF.
+          select single iobjnm
+              from zcore_fixed
+              into @data(lv_fixed_iobjnm)
+              where iobjnm = @lv_iobjnm.
+          if sy-subrc <> 0.
+            CALL FUNCTION 'BAPI_IOBJ_GETDETAIL'
+              EXPORTING
+                infoobject = lv_iobjnm
+                version    = rs_c_objvers-active
+              IMPORTING
+                return     = ls_return.
+            IF ls_return-number = '000'.
+              rv_iobjnm = lv_iobjnm.
+              nv_cloned = rs_c_true.
+              MESSAGE i016(zcore) WITH lv_iobjnm rv_iobjnm 'Reuase name - copy' INTO _message.
+              CALL METHOD static_add_message.
+              EXIT.
+            ENDIF.
+          else.
+            " The infoobject is listed in the table to not be already cloned,
+            " This is a way of preventing a activated InfoObject to be part
+            " of another project. f.x. if an InfoObject is activated for ONE purpose
+            " this Iobj will always be part of the clone process. This to prevent
+            "
+          endif.
         WHEN 5.
           IF iv_check_workinglist = rs_c_true.
             READ TABLE gth_workinglist TRANSPORTING NO FIELDS

@@ -13,7 +13,7 @@
     <LANGUAGE>E</LANGUAGE>
     <OBJECTNAME>ZCORE_FIXED</OBJECTNAME>
     <OBJECTTYPE>S</OBJECTTYPE>
-    <DDTEXT>InfoObject where we use standard objects</DDTEXT>
+    <DDTEXT>InfoObject to be excluded in the cloning process</DDTEXT>
    </OBJT>
    <OBJS>
     <OBJS>
