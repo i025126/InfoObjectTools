@@ -161,6 +161,18 @@
     <T100>
      <SPRSL>E</SPRSL>
      <ARBGB>ZCORE</ARBGB>
+     <MSGNR>025</MSGNR>
+     <TEXT>Presumed target of IOBJ &amp;1 as &amp;2 does exit but placed in &amp;3 and ignored</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
+     <MSGNR>026</MSGNR>
+     <TEXT>Extended Check InfoObject &amp;1</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZCORE</ARBGB>
      <MSGNR>101</MSGNR>
      <TEXT>Start processing CREATE of block &amp;1</TEXT>
     </T100>

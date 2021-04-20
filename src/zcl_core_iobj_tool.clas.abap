@@ -811,17 +811,56 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
 
   METHOD get_existing.
 
-    DATA ls_return TYPE bapiret2.
+    data:
+      ls_details type BAPI6108,
+      ls_return TYPE bapiret2.
+
     DATA(lv_iobjnm) = nv_original.
     IF iv_iobjnm IS SUPPLIED.
       lv_iobjnm = iv_iobjnm.
     ENDIF.
 
+    select single mtinfoarea
+      from rsdiobj
+      where iobjnm = @lv_iobjnm and
+            ( objvers = @rs_c_objvers-active or
+              objvers = @rs_c_objvers-modified )
+      into  @data(lv_current_infoarea).
+    data(lv_use_existing_iobj) = rs_c_true.
+    if sy-subrc = 0.
+      lv_use_existing_iobj = rs_c_true.
+      " An InfoObject with the same name as the source does exist
+      " but is only the be allowed to be used if it is inteded for usage
+      if lv_iobjnm cs '0CAL'.
+        " Just to make sure it's not included in the rest of the if's
+      elseif lv_iobjnm(1) = '0' and lv_current_infoarea(1) = '0'.
+        call METHOD static_add_message(  value #( msgid = 'ZCORE'
+                                                  msgty = rs_c_info
+                                                  msgno = '000'
+                                                  msgv1 = 'InfoObject'
+                                                  msgv2 = lv_iobjnm
+                                                  msgv3 = 'is a BCS but not moved to a "reusable InfoArea'
+                                                  msgv4 = lv_current_infoarea ) ).
+        lv_use_existing_iobj = rs_c_false.
+      elseif lv_iobjnm(1) = '0'.
+        "Not included in the if
+      elseif lv_iobjnm(1) <> lv_current_infoarea(1).
+        call METHOD static_add_message(  value #( msgid = 'ZCORE'
+                                                  msgty = rs_c_info
+                                                  msgno = '000'
+                                                  msgv1 = 'Cluster InfoObject'
+                                                  msgv2 = lv_iobjnm
+                                                  msgv3 = 'Is not placed in a cluster infoarea'
+                                                  msgv4 = lv_current_infoarea ) ).
+        lv_use_existing_iobj = rs_c_false.
+      endif.
+    endif.
+
     CLEAR rv_iobjnm.
     DO 6 TIMES.
       CASE sy-index.
-        WHEN 1.
-          " Never copy the fixed InfoObjects, but also just check if these have been activated
+        WHEN 1. " Fixed InfoObject is so special that we do not want to copy them
+                " Never copy the fixed InfoObjects, but also just check if these have been activated
           SELECT SINGLE iobjnm INTO rv_iobjnm
               FROM rsdiobjfix
               WHERE iobjnm = lv_iobjnm.
@@ -849,7 +888,7 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
                   object = 'Original Object'.
             ENDIF.
           ENDIF.
-        WHEN 2.
+        WHEN 2. " Check if the InfoObject
           IF nv_missing = rs_c_false.
             " Find out if the name is already in
             SELECT SINGLE iobjnm INTO rv_iobjnm
@@ -868,7 +907,11 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
           " 0 is business content
           " X is cross
           " Z is playground
-          if nv_rfcdest = 'NONE' and get_cluster( lv_iobjnm ) <> gv_target_cluster and get_cluster( lv_iobjnm ) between 'A' and 'Y'.
+          if    nv_rfcdest = 'NONE'
+            and get_cluster( lv_iobjnm ) <> gv_target_cluster
+            and get_cluster( lv_iobjnm ) between 'A' and 'Y'
+            and lv_use_existing_iobj = rs_c_true.
+
             IF iv_check_workinglist = rs_c_true.
               READ TABLE gth_workinglist TRANSPORTING NO FIELDS
                  WITH TABLE KEY table_line = lv_iobjnm.
@@ -884,30 +927,22 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
         WHEN 4.
           " So let us see if the original (name) does check_exists in
           " a active version in the this installation
-          select single iobjnm
-              from zcore_fixed
-              into @data(lv_fixed_iobjnm)
-              where iobjnm = @lv_iobjnm.
-          if sy-subrc <> 0.
-            CALL FUNCTION 'BAPI_IOBJ_GETDETAIL'
-              EXPORTING
-                infoobject = lv_iobjnm
-                version    = rs_c_objvers-active
-              IMPORTING
-                return     = ls_return.
-            IF ls_return-number = '000'.
-              rv_iobjnm = lv_iobjnm.
-              nv_cloned = rs_c_true.
-              MESSAGE i016(zcore) WITH lv_iobjnm rv_iobjnm 'Reuase name - copy' INTO _message.
-              CALL METHOD static_add_message.
-              EXIT.
-            ENDIF.
-          else.
-            " The infoobject is listed in the table to not be already cloned,
-            " This is a way of preventing a activated InfoObject to be part
-            " of another project. f.x. if an InfoObject is activated for ONE purpose
-            " this Iobj will always be part of the clone process. This to prevent
-            "
+          CALL FUNCTION 'BAPI_IOBJ_GETDETAIL'
+            EXPORTING
+              infoobject = lv_iobjnm
+              version    = rs_c_objvers-active
+            IMPORTING
+              details    = ls_details
+              return     = ls_return.
+          IF ls_return-number = '000'.
+            if lv_use_existing_iobj = rs_c_false.
+              continue.
+            endif.
+            rv_iobjnm = lv_iobjnm.
+            nv_cloned = rs_c_true.
+            MESSAGE i016(zcore) WITH lv_iobjnm rv_iobjnm 'Reuase name - copy' INTO _message.
+            CALL METHOD static_add_message.
+            EXIT.
           endif.
         WHEN 5.
           IF iv_check_workinglist = rs_c_true.
@@ -915,6 +950,7 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
                WITH TABLE KEY table_line = lv_iobjnm.
             IF sy-subrc = 0.
               MESSAGE i016(zcore) WITH lv_iobjnm '?' 'No processing yet - Clone?' INTO _message.
+              CALL METHOD static_add_message.
               EXIT.
             ENDIF.
           ENDIF.
@@ -953,10 +989,6 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
 
     if sy-subrc <> 0.
       rv_cluster = lv_iobjnm(1).
-    endif.
-
-    if rv_cluster not between 'A' and 'Z'.
-      rv_cluster = gc_cluster-common.
     endif.
 
   ENDMETHOD.
@@ -1377,7 +1409,58 @@ CLASS zcl_core_iobj_tool IMPLEMENTATION.
     sort lt_rng_iobj by low.
     delete ADJACENT DUPLICATES FROM lt_rng_iobj COMPARING low.
 
-    IF iv_no_activation = rs_c_false.
+    call METHOD static_add_message( value #( msgid = 'ZCORE'
+                                             msgty = rs_c_info
+                                             msgno = '000'
+                                             msgv1 = 'Start extended check of InfoObjects' ) ).
+
+    data(lv_no_activation) = iv_no_activation.
+    if gv_simulation = rs_c_false.
+      call METHOD static_go_level_low.
+      LOOP AT gth_workinglist ASSIGNING <lv_iobjnm>.
+        data(lr_check_iobjnm) = cl_rsd_iobj=>factory( <lv_iobjnm> ).
+
+        call METHOD static_add_message( value #( msgid = 'ZCORE'
+                                                 msgty = rs_c_info
+                                                 msgno = '026'
+                                                msgv1 = <lv_iobjnm> ) ).
+
+        call METHOD lr_check_iobjnm->if_rso_tlogo_maintain~check
+          EXPORTING
+            i_objvers  = rs_c_objvers-modified
+          IMPORTING
+            e_r_msg    = data(lr_check_msg)
+            e_subrc    = data(lv_check_rc).
+
+        call METHOD static_go_level_low.
+        loop at lr_check_msg->get_all_msg( ) into data(ls_msg).
+          call METHOD static_add_message( value #( msgid = ls_msg-msgid
+                                                   msgty = ls_msg-msgty
+                                                   msgno = ls_msg-msgno
+                                                   msgv1 = ls_msg-msgv1
+                                                   msgv2 = ls_msg-msgv2
+                                                   msgv3 = ls_msg-msgv3
+                                                   msgv4 = ls_msg-msgv4 ) ).
+        ENDLOOP.
+        call METHOD static_go_level_up.
+
+        if lv_check_rc <> 0.
+          lv_no_activation = rs_c_true.
+        endif.
+      ENDLOOP.
+      call METHOD static_go_level_up.
+
+      if lv_no_activation = rs_c_true.
+        call METHOD static_add_message( value #( msgid = 'ZCORE'
+                                                 msgty = rs_c_info
+                                                 msgno = '000'
+                                                 msgv1 = 'Extended gave errors - no activation will be performed' ) ).
+      endif.
+    else.
+      lv_no_activation = rs_c_true.
+    endif.
+
+    IF lv_no_activation = rs_c_false.
       SUBMIT rsdg_iobj_activate WITH
          so_iobj IN lt_rng_iobj AND RETURN.
     ENDIF.

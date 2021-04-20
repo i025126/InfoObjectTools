@@ -21,6 +21,14 @@ PARAMETERS:
 
 SELECTION-SCREEN END OF BLOCK clone.
 
+SELECTION-SCREEN BEGIN OF BLOCK area WITH FRAME TITLE TEXT-300.
+
+PARAMETERS:
+  pv_area TYPE rsinfoarea.
+
+SELECTION-SCREEN END OF BLOCK area.
+
+
 PARAMETERS:
   pv_simu  TYPE rs_bool DEFAULT rs_c_true,
   pv_noact TYPE rs_bool DEFAULT rs_c_true.
@@ -29,7 +37,11 @@ START-OF-SELECTION.
 
   zcl_core_iobj_tool=>gv_simulation = pv_simu.
   zcl_core_iobj_tool=>static_reset_all( ).
-  zcl_core_iobj_tool=>static_set_infoarea( |{ zcl_core_basis_tools=>get_c( 'PREFIX_CLUSTER' ) }{ pv_targ }| ).
+  if pv_area is INITIAL.
+    zcl_core_iobj_tool=>static_set_infoarea( |{ zcl_core_basis_tools=>get_c( 'PREFIX_CLUSTER' ) }{ pv_targ }| ).
+  else.
+    zcl_core_iobj_tool=>static_set_infoarea( pv_area ).
+  endif.
 
   zcl_core_iobj_tool=>gv_prefix = pv_prex.
 
